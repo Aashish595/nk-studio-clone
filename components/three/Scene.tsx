@@ -13,16 +13,12 @@ import {
 
 import CameraRig from "./CameraRig";
 
-import InnerShardOrbit from "../world/InnerShardOrbit";
-import NeonObelisk from "../world/NeonObelisk";
-import OrbitCrystalSet from "../world/OrbitCrystalSet";
-
-import Pond from "../world/Pond";
-import PondSparks from "../world/PondSparks";
+// Tech-themed components
+import TechGrid from "../world/TechGrid";
+import FloatingNodes from "../world/FloatingNodes";
+import HoloSphere from "../world/HoloSphere";
+import DataParticles from "../world/DataParticles";
 import DepthDust from "../world/DepthDust";
-import Aurora from "../world/Aurora";
-import HillsTerrain from "../world/HillsTerrain";
-import MountainsBackdrop from "../world/MountainsBackdrop";
 
 function useSectionProgress(sectionId: string) {
   const progressRef = useRef(0);
@@ -78,80 +74,69 @@ function FocusShift({
 }
 
 export default function Scene() {
-  const terrainRef = useRef<THREE.Mesh>(null!);
   const focusRef = useRef<THREE.Group>(null!);
-  const showreelProgress = useSectionProgress("showreel");
-
-  const localCenter: [number, number, number] = [0, 0, -0.6];
+  const showreelProgress = useSectionProgress("solutions");
 
   return (
     <Canvas
-      // LOWER DPR (major blink fix)
       dpr={[1, 1.25]}
       gl={{
         antialias: true,
         powerPreference: "high-performance",
       }}
-      camera={{ position: [0, 1.2, 8.5], fov: 42, near: 0.15, far: 220 }}
+      camera={{ position: [0, 1.8, 10], fov: 42, near: 0.15, far: 220 }}
       onCreated={({ gl, scene }) => {
-        gl.physicallyCorrectLights = true;
         gl.outputColorSpace = THREE.SRGBColorSpace;
         gl.toneMapping = THREE.ACESFilmicToneMapping;
-        gl.toneMappingExposure = 1.05;
-        scene.fog = new THREE.FogExp2("#03110f", 0.018);
+        gl.toneMappingExposure = 1.1;
+        scene.fog = new THREE.FogExp2("#030810", 0.015);
       }}
-      shadows
     >
-      <color attach="background" args={["#020405"]} />
+      <color attach="background" args={["#020408"]} />
 
-      <hemisphereLight args={["#2fffe0", "#00110c", 0.35]} />
-      <ambientLight intensity={0.15} />
+      {/* Lighting — cool blue/cyan tech theme */}
+      <hemisphereLight args={["#1a3a5c", "#000408", 0.4]} />
+      <ambientLight intensity={0.12} />
 
       <directionalLight
         position={[6, 8, 3]}
-        intensity={1.15}
-        castShadow
-        shadow-mapSize-width={1024}
-        shadow-mapSize-height={1024}
+        intensity={0.9}
+        color={"#4488cc"}
       />
       <directionalLight
         position={[-10, 2, 10]}
-        intensity={0.55}
+        intensity={0.4}
         color={"#2fffe0"}
       />
 
-      {/* NO BIG Suspense WRAPPER HERE */}
       <CameraRig />
-      <Aurora />
+
+      {/* Tech background */}
+      <TechGrid />
+      <FloatingNodes />
+      <DataParticles />
       <DepthDust />
 
-      <group position={[0, -0.6, 0]}>
-  {/* terrain + mountains should NOT be inside Suspense */}
-  <HillsTerrain terrainRef={terrainRef} />
-  <MountainsBackdrop />
+      {/* Central focal object */}
+      <group ref={focusRef} position={[0, 0, 0]}>
+        <HoloSphere position={[0, 1.2, -1]} radius={1.6} />
+      </group>
 
-  {/* only things that load textures/async go in Suspense */}
-  <Suspense fallback={null}>
-    <Pond />
-    <PondSparks origin={[-10, -0.38, 4]} />
-  </Suspense>
-
-  <group ref={focusRef} position={[0, 0, 0]}>
-    <NeonObelisk terrainRef={terrainRef} position={[0, 0, -0.6]} height={3.6} width={0.55} depth={0.55} hover={0.28} />
-    <OrbitCrystalSet center={localCenter} radius={3.2} speed={0.06} zOffset={-2.2} />
-    <InnerShardOrbit center={localCenter} height={3.6} radius={0.16} count={34} speed={0.06} />
-  </group>
-</group>
+      <FocusShift
+        focusRef={focusRef}
+        progressRef={showreelProgress}
+        rightX={0}
+        leftX={-3}
+      />
 
       <EffectComposer multisampling={0}>
-        {/*  Bloom without mipmapBlur (much lighter) */}
         <Bloom
-          intensity={1.2}
-          luminanceThreshold={0.5}
+          intensity={1.4}
+          luminanceThreshold={0.4}
           luminanceSmoothing={0.85}
         />
-        <Noise opacity={0.035} />
-        <Vignette eskil={false} offset={0.12} darkness={0.9} />
+        <Noise opacity={0.03} />
+        <Vignette eskil={false} offset={0.12} darkness={0.85} />
       </EffectComposer>
     </Canvas>
   );

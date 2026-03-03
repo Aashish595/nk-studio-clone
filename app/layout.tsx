@@ -2,8 +2,9 @@ import CursorDot from "@/components/CursorDot";
 import "./globals.css";
 
 export const metadata = {
-  title: "Scroll 3D (GSAP + R3F)",
-  description: "Pinned scroll-driven 3D website starter",
+  title: "FinSocial Digital Systems — Technology Meets Finance",
+  description:
+    "FinSocial Digital Systems: AI-powered fintech innovation — from intelligent automation to digital payments, blockchain, and beyond.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

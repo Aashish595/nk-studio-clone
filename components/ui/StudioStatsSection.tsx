@@ -62,7 +62,7 @@ function Milestone({
         </div>
 
         <div className="max-w-[96%]">
-          <div className="text-white/92 font-light text-[22px] leading-[1.2] tracking-[-0.01em]">
+          <div className="text-white/92 font-light text-[22px] leading-[1.2] tracking-[-0.01em]" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
             {title}
           </div>
           <div className="mt-2 text-white/55 text-[12px] leading-[1.55]">
@@ -91,28 +91,29 @@ export default function StudioStatsSection() {
     const ctx = gsap.context(() => {
       gsap.fromTo(
         ".ss-copy",
-        { y: 18, opacity: 0 },
+        { y: 30, opacity: 0, filter: "blur(4px)" },
         {
           y: 0,
           opacity: 1,
-          duration: 0.9,
+          filter: "blur(0px)",
+          duration: 1,
           ease: "power3.out",
-          stagger: 0.08,
+          stagger: 0.1,
           scrollTrigger: { trigger: el, start: "top 70%", once: true },
         }
       );
 
       gsap.fromTo(
         ".ss-card",
-        { y: 40, opacity: 0, scale: 0.96, filter: "blur(6px)" },
+        { y: 50, opacity: 0, scale: 0.95, filter: "blur(6px)" },
         {
           y: 0,
           opacity: 1,
           scale: 1,
           filter: "blur(0px)",
-          duration: 0.9,
+          duration: 1,
           ease: "power3.out",
-          stagger: 0.10,
+          stagger: 0.12,
           scrollTrigger: { trigger: el, start: "top 70%", once: true },
         }
       );
@@ -127,7 +128,6 @@ export default function StudioStatsSection() {
       className="relative z-30 min-h-screen pt-[120px] pb-[140px]"
     >
       <div ref={wrapRef} className="mx-auto max-w-[1600px] px-[56px]">
-        {/* ===== 2 DIV LAYOUT (LEFT EMPTY, RIGHT CONTENT) ===== */}
         <div className="grid grid-cols-12 gap-x-[26px]">
           {/* LEFT EMPTY SPACE FOR 3D */}
           <div className="col-span-5" />
@@ -135,12 +135,12 @@ export default function StudioStatsSection() {
           {/* RIGHT SIDE CONTENT */}
           <div className="col-span-7">
             {/* TOP COPY */}
-            <h2 className="ss-copy text-white/95 font-light text-[64px] leading-[1.02] tracking-[-0.02em]">
-              We create experiences that
+            <h2 className="ss-copy text-white/95 font-light text-[64px] leading-[1.02] tracking-[-0.02em]" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+              Pioneering digital
               <br />
-              ignite passion by reimagining
+              innovation from research
               <br />
-              what&apos;s possible
+              to <span className="gradient-text-static">real-world impact</span>
             </h2>
 
             <div className="ss-copy mt-[26px] grid grid-cols-12 gap-x-[18px] items-start">
@@ -157,21 +157,21 @@ export default function StudioStatsSection() {
 
               <div className="col-span-7">
                 <p className="text-white/70 text-[14px] leading-[1.75]">
-                  A focused timeline of how we built Hind AI—starting with
+                  A focused timeline of how we built Hind AI — starting with
                   advanced generative AI research, growing a world-class team,
                   and launching into intelligent automation &amp; creative
-                  problem solving.
+                  problem solving at FinSocial Digital Systems.
                 </p>
               </div>
             </div>
 
-            {/* ===== GENUINE DATA: MILESTONES GRID (MINIMIZED) ===== */}
+            {/* MILESTONES GRID */}
             <div className="mt-[44px] grid grid-cols-12 gap-[18px]">
               <div className="col-span-6">
                 <Milestone
                   month="May 2024"
                   title="Foundation in the US"
-                  desc="Registered in the US and kick-started research into advanced generative AI."
+                  desc="Registered in the US and kick-started research into advanced generative AI for finance."
                 />
               </div>
 
@@ -179,7 +179,7 @@ export default function StudioStatsSection() {
                 <Milestone
                   month="May 2024"
                   title="Building a world-class AI team"
-                  desc="Began forming the core team while deepening AI research."
+                  desc="Began forming the core engineering team while deepening AI & fintech research."
                 />
               </div>
 
@@ -187,7 +187,7 @@ export default function StudioStatsSection() {
                 <Milestone
                   month="June 2024"
                   title="Expanded vision & leadership"
-                  desc="Hired dedicated talent and welcomed new co-founders to accelerate innovation."
+                  desc="Hired dedicated talent and welcomed new co-founders to accelerate fintech innovation."
                   h="h-[230px]"
                 />
               </div>
@@ -196,7 +196,7 @@ export default function StudioStatsSection() {
                 <Milestone
                   month="July 2024"
                   title="Commitment to India"
-                  desc="Registered in India as Finsocial Digital Systems—cementing local innovation."
+                  desc="Registered in India as FinSocial Digital Systems — cementing local digital innovation."
                 />
               </div>
 
@@ -204,7 +204,7 @@ export default function StudioStatsSection() {
                 <Milestone
                   month="September 2024"
                   title="First growth milestone"
-                  desc="Reached a 10-member team—laying the foundation for rapid growth."
+                  desc="Reached a 10-member team — laying the foundation for rapid growth in AI & digital payments."
                   align="center"
                   h="h-[230px]"
                 />
@@ -214,7 +214,7 @@ export default function StudioStatsSection() {
                 <Milestone
                   month="December 2024"
                   title="Scaled to 25 members"
-                  desc="Grew to 25 passionate people driving R&amp;D forward."
+                  desc="Grew to 25 passionate engineers & researchers driving fintech R&D forward."
                 />
               </div>
 
@@ -222,7 +222,7 @@ export default function StudioStatsSection() {
                 <Milestone
                   month="February 2025"
                   title="AI breakthroughs"
-                  desc="Developed generative AI models that set new industry benchmarks."
+                  desc="Developed generative AI models for financial intelligence that set new industry benchmarks."
                   h="h-[230px]"
                 />
               </div>
@@ -231,7 +231,7 @@ export default function StudioStatsSection() {
                 <Milestone
                   month="April 2025"
                   title="Launched Hind AI"
-                  desc="Official launch—beginning a new era of intelligent automation and creative problem solving."
+                  desc="Official launch — beginning a new era of intelligent automation, digital payments, and creative problem solving."
                   align="center"
                   h="h-[230px]"
                 />
@@ -239,7 +239,7 @@ export default function StudioStatsSection() {
             </div>
 
             <div className="mt-[18px]">
-              <button className="text-white/85 text-[12px] tracking-[0.22em] uppercase border-b border-white/30 hover:border-white/70 pb-2">
+              <button className="text-white/85 text-[12px] tracking-[0.22em] uppercase border-b border-white/30 hover:border-white/70 pb-2 transition-colors duration-300">
                 DISCOVER OUR JOURNEY
               </button>
             </div>

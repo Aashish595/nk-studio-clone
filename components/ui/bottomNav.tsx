@@ -12,16 +12,13 @@ export default function BottomNav() {
 
     const { gsap, ScrollTrigger } = getGSAP();
 
-    // optional: smoother transform rendering
     gsap.set(el, { willChange: "transform" });
 
-    // compute how far it should travel (bottom position -> top bar area)
-    const topTarget = 22;      // where you want it to end up from top
-    const bottomOffset = 34;   // your current bottom offset
+    const topTarget = 22;
+    const bottomOffset = 34;
     const navHeight = el.getBoundingClientRect().height;
 
     const getY = () => {
-      // current y is 0 at bottom; we move it up by this distance
       const distance =
         window.innerHeight - bottomOffset - navHeight - topTarget;
       return -Math.max(0, distance);
@@ -33,9 +30,9 @@ export default function BottomNav() {
       ease: "none",
       scrollTrigger: {
         trigger: "#hero",
-        start: "top top",        // when hero starts
-        end: "bottom top",       // until hero scrolls out
-        scrub: 0.8,              // <-- THIS is what makes it feel smooth
+        start: "top top",
+        end: "bottom top",
+        scrub: 0.8,
         invalidateOnRefresh: true,
       },
     });
@@ -58,10 +55,10 @@ export default function BottomNav() {
           text-[14px] text-white/80
         "
       >
-        <a className="hover:text-white transition" href="#studio">Studio</a>
-        <a className="hover:text-white transition" href="#work">Work</a>
-        <a className="hover:text-white transition" href="#services">Services</a>
-        <a className="hover:text-white transition" href="#news">News</a>
+        <a className="hover:text-white transition" href="#solutions">Solutions</a>
+        <a className="hover:text-white transition" href="#studio">Technology</a>
+        <a className="hover:text-white transition" href="#droplet-intro">About</a>
+        <a className="hover:text-white transition" href="#warp">Insights</a>
         <a className="hover:text-white transition" href="#contact">Contact</a>
       </div>
     </div>

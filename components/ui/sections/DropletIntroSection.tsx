@@ -13,18 +13,20 @@ export default function DropletIntroSection({ open }: { open: boolean }) {
                 open ? "opacity-100 translate-y-0 blur-0" : "opacity-0 translate-y-6 blur-[6px]",
               ].join(" ")}
             >
-              <div className="text-[11px] tracking-[0.18em] uppercase text-white/65">
-                TRANSITION
+              <div className="text-[11px] tracking-[0.18em] uppercase text-white/50">
+                DIGITAL TRANSFORMATION
               </div>
 
-              <h2 className="mt-[18px] text-white/95 font-light text-[64px] leading-[1.02] tracking-[-0.02em]">
-                A single drop
+              <h2 className="mt-[18px] text-white/95 font-light text-[64px] leading-[1.02] tracking-[-0.02em]" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+                A single idea
                 <br />
-                breaks the silence
+                <span className="gradient-text-static">sparks innovation</span>
               </h2>
 
-              <p className="mt-[22px] text-white/65 text-[14px] leading-[1.8] max-w-[560px]">
-                The moment expands, then the story opens.
+              <p className="mt-[22px] text-white/55 text-[14px] leading-[1.8] max-w-[560px]">
+                Every breakthrough in financial technology begins with one bold concept.
+                We transform that spark into scalable digital infrastructure
+                that reshapes industries.
               </p>
             </div>
           </div>

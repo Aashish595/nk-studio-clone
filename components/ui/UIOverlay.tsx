@@ -10,7 +10,13 @@ import StudioStatsSection from "./StudioStatsSection";
 import WarpSection from "./sections/WarpSection";
 import DropletIntroSection from "./sections/DropletIntroSection";
 
-export default function UIOverlay({ introDone }: { introDone: boolean }) {
+export default function UIOverlay({
+  introDone,
+  dropletOpen,
+}: {
+  introDone: boolean;
+  dropletOpen: boolean;
+}) {
   return (
     <div className="relative z-10">
       <TopBar />
@@ -21,7 +27,7 @@ export default function UIOverlay({ introDone }: { introDone: boolean }) {
       <ShowreelSection />
       <StudioStatsSection />
 
-      <DropletIntroSection open={introDone} />
+      <DropletIntroSection open={dropletOpen} />
       <WarpSection />
     </div>
   );
