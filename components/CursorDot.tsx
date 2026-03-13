@@ -71,7 +71,7 @@ export default function Cursor() {
       className="
         fixed top-0 left-0
         pointer-events-none
-        z-[9999]
+        z-9999
         w-12 h-12
         rounded-full
         bg-emerald-400/10

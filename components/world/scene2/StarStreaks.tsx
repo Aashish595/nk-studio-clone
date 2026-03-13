@@ -1,7 +1,7 @@
 "use client";
 
 import * as THREE from "three";
-import React, { useMemo, useRef } from "react";
+import React, { useEffect, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 
 type Props = {
@@ -25,28 +25,58 @@ export default function StarStreaks({
 }: Props) {
   const geoRef = useRef<THREE.BufferGeometry>(null!);
 
-  const state = useMemo(() => {
-    const positions = new Float32Array(count * 2 * 3);
+  const xsRef = useRef<Float32Array>(new Float32Array(count));
+  const ysRef = useRef<Float32Array>(new Float32Array(count));
+  const zsRef = useRef<Float32Array>(new Float32Array(count));
+  const lensRef = useRef<Float32Array>(new Float32Array(count));
+  const spdRef = useRef<Float32Array>(new Float32Array(count));
+  const positionsRef = useRef<Float32Array>(new Float32Array(count * 2 * 3));
 
-    const xs = new Float32Array(count);
-    const ys = new Float32Array(count);
-    const zs = new Float32Array(count);
-    const lens = new Float32Array(count);
-    const spd = new Float32Array(count);
+  const seedRef = useRef(246813579);
 
-    const rand = (a: number, b: number) => a + Math.random() * (b - a);
+  const rand = (a: number, b: number) => {
+    seedRef.current = (1664525 * seedRef.current + 1013904223) % 4294967296;
+    const r = seedRef.current / 4294967296;
+    return a + r * (b - a);
+  };
 
-    const respawn = (i: number) => {
-      xs[i] = rand(-radius, radius);
-      ys[i] = rand(-radius * 0.6, radius * 0.6);
-      zs[i] = -rand(depth * 0.25, depth); // random deep start
-      lens[i] = rand(minLen, maxLen);
-      spd[i] = rand(0.7, 1.45); // per-star speed (kills bundling)
-    };
+  const respawn = (i: number) => {
+    const xs = xsRef.current;
+    const ys = ysRef.current;
+    const zs = zsRef.current;
+    const lens = lensRef.current;
+    const spd = spdRef.current;
 
-    for (let i = 0; i < count; i++) respawn(i);
+    xs[i] = rand(-radius, radius);
+    ys[i] = rand(-radius * 0.6, radius * 0.6);
+    zs[i] = -rand(depth * 0.25, depth);
+    lens[i] = rand(minLen, maxLen);
+    spd[i] = rand(0.7, 1.45);
+  };
 
-    // write initial positions
+  const initialPositions = useMemo(
+    () => new Float32Array(count * 2 * 3),
+    [count]
+  );
+
+  useEffect(() => {
+    xsRef.current = new Float32Array(count);
+    ysRef.current = new Float32Array(count);
+    zsRef.current = new Float32Array(count);
+    lensRef.current = new Float32Array(count);
+    spdRef.current = new Float32Array(count);
+    positionsRef.current = new Float32Array(count * 2 * 3);
+
+    const positions = positionsRef.current;
+    const xs = xsRef.current;
+    const ys = ysRef.current;
+    const zs = zsRef.current;
+    const lens = lensRef.current;
+
+    for (let i = 0; i < count; i++) {
+      respawn(i);
+    }
+
     for (let i = 0; i < count; i++) {
       const a = i * 6;
       positions[a + 0] = xs[i];
@@ -57,35 +87,45 @@ export default function StarStreaks({
       positions[a + 5] = zs[i] - lens[i];
     }
 
-    return { positions, xs, ys, zs, lens, spd, respawn };
+    const geometry = geoRef.current;
+    if (!geometry) return;
+
+    const attr = geometry.getAttribute("position") as THREE.BufferAttribute;
+    attr.array = positions;
+    attr.needsUpdate = true;
   }, [count, depth, radius, minLen, maxLen]);
 
   useFrame((_, dt) => {
-    const g = geoRef.current;
-    if (!g) return;
+    const geometry = geoRef.current;
+    if (!geometry) return;
 
-    const pos = g.getAttribute("position") as THREE.BufferAttribute;
+    const pos = geometry.getAttribute("position") as THREE.BufferAttribute;
+    const arr = pos.array as Float32Array;
+
+    const xs = xsRef.current;
+    const ys = ysRef.current;
+    const zs = zsRef.current;
+    const lens = lensRef.current;
+    const spd = spdRef.current;
 
     for (let i = 0; i < count; i++) {
-      // move toward camera (+z)
-      state.zs[i] += speed * state.spd[i] * dt;
+      zs[i] += speed * spd[i] * dt;
 
-      // tiny drift so it feels “alive”
-      state.xs[i] += Math.sin((state.zs[i] + i) * 0.03) * 0.002;
-      state.ys[i] += Math.cos((state.zs[i] + i) * 0.03) * 0.002;
+      xs[i] += Math.sin((zs[i] + i) * 0.03) * 0.002;
+      ys[i] += Math.cos((zs[i] + i) * 0.03) * 0.002;
 
-      if (state.zs[i] > nearZ) {
-        state.respawn(i);
+      if (zs[i] > nearZ) {
+        respawn(i);
       }
 
       const a = i * 6;
-      pos.array[a + 0] = state.xs[i];
-      pos.array[a + 1] = state.ys[i];
-      pos.array[a + 2] = state.zs[i];
+      arr[a + 0] = xs[i];
+      arr[a + 1] = ys[i];
+      arr[a + 2] = zs[i];
 
-      pos.array[a + 3] = state.xs[i];
-      pos.array[a + 4] = state.ys[i];
-      pos.array[a + 5] = state.zs[i] - state.lens[i];
+      arr[a + 3] = xs[i];
+      arr[a + 4] = ys[i];
+      arr[a + 5] = zs[i] - lens[i];
     }
 
     pos.needsUpdate = true;
@@ -96,14 +136,12 @@ export default function StarStreaks({
       <bufferGeometry ref={geoRef}>
         <bufferAttribute
           attach="attributes-position"
-          count={state.positions.length / 3}
-          array={state.positions}
-          itemSize={3}
+          args={[initialPositions, 3]}
         />
       </bufferGeometry>
 
       <lineBasicMaterial
-        color={"#2fffe0"}
+        color="#2fffe0"
         transparent
         opacity={0.75}
         blending={THREE.AdditiveBlending}

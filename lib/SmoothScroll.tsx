@@ -16,21 +16,25 @@ export default function SmoothScroll() {
       lerp: 0.08,
     });
 
+    let rafId = 0;
+
     function raf(time: number) {
       lenis.raf(time);
       ScrollTrigger.update();
-      requestAnimationFrame(raf);
+      rafId = requestAnimationFrame(raf);
     }
 
-    requestAnimationFrame(raf);
+    rafId = requestAnimationFrame(raf);
 
     lenis.on("scroll", ScrollTrigger.update);
 
     ScrollTrigger.scrollerProxy(document.body, {
-      scrollTop(value) {
-        return arguments.length
-          ? lenis.scrollTo(value, { immediate: true })
-          : window.scrollY;
+      scrollTop(value?: number) {
+        if (typeof value === "number") {
+          lenis.scrollTo(value, { immediate: true });
+          return;
+        }
+        return window.scrollY;
       },
       getBoundingClientRect() {
         return {
@@ -45,6 +49,7 @@ export default function SmoothScroll() {
     ScrollTrigger.refresh();
 
     return () => {
+      cancelAnimationFrame(rafId);
       lenis.destroy();
     };
   }, []);
