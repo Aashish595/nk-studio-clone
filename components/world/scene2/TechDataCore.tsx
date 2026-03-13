@@ -184,8 +184,9 @@ export default function TechDataCore({
           <bufferAttribute
             attach="attributes-position"
             array={linePositions}
+            args={[linePositions,3] }
             count={linePositions.length / 3}
-            itemSize={3}
+            
           />
         </bufferGeometry>
         <lineBasicMaterial

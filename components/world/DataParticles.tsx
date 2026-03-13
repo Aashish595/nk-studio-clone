@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { useFrame } from "@react-three/fiber";
 
@@ -23,56 +23,80 @@ export default function DataParticles({
 }) {
   const pointsRef = useRef<THREE.Points>(null!);
 
-  const { positions, velocities, sizes } = useMemo(() => {
-    const positions = new Float32Array(count * 3);
-    const velocities = new Float32Array(count);
-    const sizes = new Float32Array(count);
+  const positionsRef = useRef<Float32Array>(new Float32Array(count * 3));
+  const velocitiesRef = useRef<Float32Array>(new Float32Array(count));
+  const sizesRef = useRef<Float32Array>(new Float32Array(count));
+
+  const seedRef = useRef(123456789);
+
+  const rand = (a: number, b: number) => {
+    seedRef.current = (1664525 * seedRef.current + 1013904223) % 4294967296;
+    const r = seedRef.current / 4294967296;
+    return a + r * (b - a);
+  };
+
+  useEffect(() => {
+    positionsRef.current = new Float32Array(count * 3);
+    velocitiesRef.current = new Float32Array(count);
+    sizesRef.current = new Float32Array(count);
+
+    const positions = positionsRef.current;
+    const velocities = velocitiesRef.current;
+    const sizes = sizesRef.current;
 
     for (let i = 0; i < count; i++) {
       const i3 = i * 3;
-      positions[i3] = (Math.random() - 0.5) * spread;
-      positions[i3 + 1] = Math.random() * height - 1;
-      positions[i3 + 2] = (Math.random() - 0.5) * spread;
-      velocities[i] = 0.1 + Math.random() * speed;
-      sizes[i] = 1 + Math.random() * 3;
+      positions[i3] = rand(-spread / 2, spread / 2);
+      positions[i3 + 1] = rand(-1, height);
+      positions[i3 + 2] = rand(-spread / 2, spread / 2);
+      velocities[i] = rand(0.1, 0.1 + speed);
+      sizes[i] = rand(1, 4);
     }
 
-    return { positions, velocities, sizes };
-  }, [count, spread, height, speed]);
-
-  useFrame(({ clock }) => {
     const pts = pointsRef.current;
     if (!pts) return;
 
-    const posArr = pts.geometry.attributes.position.array as Float32Array;
-    const dt = clock.getDelta() || 0.016;
+    const positionAttr = pts.geometry.getAttribute("position") as THREE.BufferAttribute;
+    positionAttr.array = positionsRef.current;
+    positionAttr.needsUpdate = true;
+
+    const sizeAttr = pts.geometry.getAttribute("size") as THREE.BufferAttribute | undefined;
+    if (sizeAttr) {
+      sizeAttr.array = sizesRef.current;
+      sizeAttr.needsUpdate = true;
+    }
+  }, [count, spread, height, speed]);
+
+  useFrame((_, dt) => {
+    const pts = pointsRef.current;
+    if (!pts) return;
+
+    const posArr = positionsRef.current;
+    const velocities = velocitiesRef.current;
 
     for (let i = 0; i < count; i++) {
       const i3 = i * 3;
       posArr[i3 + 1] += velocities[i] * dt * 2;
 
-      // Reset when above height
       if (posArr[i3 + 1] > height) {
         posArr[i3 + 1] = -1;
-        posArr[i3] = (Math.random() - 0.5) * spread;
-        posArr[i3 + 2] = (Math.random() - 0.5) * spread;
+        posArr[i3] = rand(-spread / 2, spread / 2);
+        posArr[i3 + 2] = rand(-spread / 2, spread / 2);
       }
     }
 
-    pts.geometry.attributes.position.needsUpdate = true;
+    const positionAttr = pts.geometry.getAttribute("position") as THREE.BufferAttribute;
+    positionAttr.needsUpdate = true;
   });
+
+  const initialPositions = useMemo(() => new Float32Array(count * 3), [count]);
+  const initialSizes = useMemo(() => new Float32Array(count), [count]);
 
   return (
     <points ref={pointsRef}>
       <bufferGeometry>
-        <bufferAttribute
-          attach="attributes-position"
-          args={[positions, 3]}
-        />
-        <bufferAttribute
-          attach="attributes-size"
-          args={[sizes, 1]}
-        />
+        <bufferAttribute attach="attributes-position" args={[initialPositions, 3]} />
+        <bufferAttribute attach="attributes-size" args={[initialSizes, 1]} />
       </bufferGeometry>
       <pointsMaterial
         color={color}

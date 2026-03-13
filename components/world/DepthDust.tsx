@@ -1,27 +1,33 @@
 "use client";
 
 import * as THREE from "three";
-import { useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 
 export default function DepthDust() {
-  const points = useRef<THREE.Points>(null!);
+  const pointsRef = useRef<THREE.Points>(null!);
+  const count = 900;
 
-  const { geom, mat, count } = useMemo(() => {
-    const count = 900;
-    const positions = new Float32Array(count * 3);
+  const positionsRef = useRef<Float32Array>(new Float32Array(count * 3));
+  const seedRef = useRef(123456789);
 
-    for (let i = 0; i < count; i++) {
-      const x = (Math.random() - 0.5) * 40;      
-      const y = Math.random() * 8 - 1.0;        
-      const z = -Math.random() * 90 - 5;        
-      positions.set([x, y, z], i * 3);
-    }
+  const rand = (a: number, b: number) => {
+    seedRef.current = (1664525 * seedRef.current + 1013904223) % 4294967296;
+    const r = seedRef.current / 4294967296;
+    return a + r * (b - a);
+  };
 
-    const geom = new THREE.BufferGeometry();
-    geom.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+  const geometry = useMemo(() => {
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute(
+      "position",
+      new THREE.BufferAttribute(new Float32Array(count * 3), 3)
+    );
+    return geo;
+  }, []);
 
-    const mat = new THREE.PointsMaterial({
+  const material = useMemo(() => {
+    return new THREE.PointsMaterial({
       color: "#bfffee",
       size: 0.03,
       transparent: true,
@@ -29,21 +35,45 @@ export default function DepthDust() {
       depthWrite: false,
       blending: THREE.AdditiveBlending,
     });
-
-    return { geom, mat, count };
   }, []);
 
-  useFrame((_, dt) => {
-    const pos = points.current.geometry.attributes.position as THREE.BufferAttribute;
+  useEffect(() => {
+    const positions = positionsRef.current;
 
     for (let i = 0; i < count; i++) {
-      let z = pos.getZ(i);
-      z += dt * 0.55; // 
-      if (z > 6) z = -90 - Math.random() * 20;
-      pos.setZ(i, z);
+      const i3 = i * 3;
+      positions[i3 + 0] = rand(-20, 20);
+      positions[i3 + 1] = rand(-1, 7);
+      positions[i3 + 2] = rand(-95, -5);
     }
-    pos.needsUpdate = true;
+
+    const attr = geometry.getAttribute("position") as THREE.BufferAttribute;
+    attr.array = positions;
+    attr.needsUpdate = true;
+  }, [geometry]);
+
+  useFrame((_, dt) => {
+    const attr = geometry.getAttribute("position") as THREE.BufferAttribute;
+    const pos = attr.array as Float32Array;
+
+    for (let i = 0; i < count; i++) {
+      const i3 = i * 3;
+      pos[i3 + 2] += dt * 0.55;
+
+      if (pos[i3 + 2] > 6) {
+        pos[i3 + 2] = rand(-110, -90);
+      }
+    }
+
+    attr.needsUpdate = true;
   });
 
-  return <points ref={points} geometry={geom} material={mat} position={[0, 0.0, 0]} />;
+  return (
+    <points
+      ref={pointsRef}
+      geometry={geometry}
+      material={material}
+      position={[0, 0, 0]}
+    />
+  );
 }
