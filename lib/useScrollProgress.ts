@@ -11,12 +11,12 @@ export function useScrollProgress() {
 
   useEffect(() => {
     const st = ScrollTrigger.create({
-      trigger: document.documentElement,     // ✅ better than document.body
+      trigger: document.documentElement,    
       start: "top top",
       end: "bottom bottom",
       scrub: 1,
       onUpdate: (self) => {
-        progress.current = self.progress; // 0..1
+        progress.current = self.progress; 
       },
     });
 

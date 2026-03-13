@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useMemo } from "react";
+import { useRef } from "react";
 import * as THREE from "three";
 import { useFrame } from "@react-three/fiber";
 
@@ -12,7 +12,7 @@ export default function TechGrid({
   size = 80,
   divisions = 40,
   color = "#0ff4c6",
-  pulseSpeed = 0.8,
+  pulseSpeed = 0.08,
 }: {
   size?: number;
   divisions?: number;

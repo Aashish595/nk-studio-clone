@@ -2,7 +2,7 @@
 "use client";
 
 import * as THREE from "three";
-import React, { Suspense, useEffect, useRef } from "react";
+import React, { useEffect, useRef } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import {
   EffectComposer,
@@ -11,7 +11,7 @@ import {
   Noise,
 } from "@react-three/postprocessing";
 
-import CameraRig from "./CameraRig";
+import CameraRigScene1 from "./CameraRigScene1";
 
 // Tech-themed components
 import TechGrid from "../world/TechGrid";
@@ -109,7 +109,7 @@ export default function Scene() {
         color={"#2fffe0"}
       />
 
-      <CameraRig />
+      <CameraRigScene1 />
 
       {/* Tech background */}
       <TechGrid />

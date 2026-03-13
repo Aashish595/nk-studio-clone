@@ -1,12 +1,11 @@
 "use client";
 
-import { useRef, useMemo } from "react";
+import { useRef } from "react";
 import * as THREE from "three";
 import { useFrame } from "@react-three/fiber";
 
 /**
  * HoloSphere – Central wireframe sphere with holographic scan-line effect.
- * Replaces the obelisk as the main focal 3D object.
  */
 export default function HoloSphere({
   position = [0, 1.2, -1] as [number, number, number],
@@ -35,7 +34,8 @@ export default function HoloSphere({
 
     // Scan line plane moves up and down
     if (scanRef.current) {
-      scanRef.current.position.y = position[1] + Math.sin(t * 0.6) * radius * 0.9;
+      scanRef.current.position.y =
+        position[1] + Math.sin(t * 0.6) * radius * 0.9;
       const mat = scanRef.current.material as THREE.MeshBasicMaterial;
       mat.opacity = 0.15 + Math.sin(t * 1.2) * 0.08;
     }

@@ -1,5 +1,6 @@
 import CursorDot from "@/components/CursorDot";
 import "./globals.css";
+import SmoothScroll from "@/lib/SmoothScroll";
 
 export const metadata = {
   title: "FinSocial Digital Systems — Technology Meets Finance",
@@ -12,6 +13,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <body>
         {children}
+        <SmoothScroll />
         <CursorDot />
       </body>
     </html>

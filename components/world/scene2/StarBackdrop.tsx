@@ -30,10 +30,23 @@ export default function StarBackdrop({
     return p;
   }, [count, radius, zMin, zMax]);
 
-  // very slow movement (almost stuck)
-  useFrame((_, dt) => {
+  useFrame((state, dt) => {
     if (!ref.current) return;
+
     ref.current.rotation.y += dt * 0.01;
+
+    // subtle parallax on the whole star field
+    ref.current.position.x = THREE.MathUtils.lerp(
+      ref.current.position.x,
+      -state.pointer.x * 1.2,
+      1 - Math.pow(0.01, dt)
+    );
+
+    ref.current.position.y = THREE.MathUtils.lerp(
+      ref.current.position.y,
+      -state.pointer.y * 0.6,
+      1 - Math.pow(0.01, dt)
+    );
   });
 
   return (
@@ -44,10 +57,10 @@ export default function StarBackdrop({
 
       <pointsMaterial
         color={"#2fffe0"}
-        size={0.13}          // ✅ bigger so visible
+        size={0.13}
         sizeAttenuation
         transparent
-        opacity={0.30}       // ✅ visible
+        opacity={0.3}
         depthWrite={false}
         depthTest={false}
         blending={THREE.AdditiveBlending}

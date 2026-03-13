@@ -15,7 +15,7 @@ export default function Page() {
 
   const [introColor, setIntroColor] = useState("#2fffe0");
 
-  // ✅ scroll direction (up/down)
+  // scroll direction (up/down)
   const dirRef = useRef<"up" | "down">("down");
 
   useEffect(() => {
@@ -44,7 +44,7 @@ export default function Page() {
         for (const e of entries) {
           const id = (e.target as HTMLElement).id;
 
-          // ✅ DROPLET INTRO SECTION
+          // DROPLET INTRO SECTION
           if (id === "droplet-intro") {
             if (e.isIntersecting && !wasIntro) {
               wasIntro = true;
@@ -60,7 +60,7 @@ export default function Page() {
             if (!e.isIntersecting) wasIntro = false;
           }
 
-          // ✅ WARP SECTION
+          // WARP SECTION
           if (id === "warp") {
             if (e.isIntersecting && !wasWarp) {
               wasWarp = true;

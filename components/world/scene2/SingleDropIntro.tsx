@@ -2,7 +2,7 @@
 
 import * as THREE from "three";
 import React, { useEffect, useMemo, useRef } from "react";
-import { useFrame, useThree } from "@react-three/fiber";
+import { useFrame } from "@react-three/fiber";
 
 export default function SingleDropIntro({
   play,
@@ -23,95 +23,28 @@ export default function SingleDropIntro({
 }) {
   const dropRef = useRef<THREE.Mesh>(null!);
   const ringRef = useRef<THREE.Mesh>(null!);
-  const splashRef = useRef<THREE.Mesh>(null!);
+  const haloRef = useRef<THREE.Mesh>(null!);
+  const beamRef = useRef<THREE.Mesh>(null!);
+  const particlesRef = useRef<THREE.Points>(null!);
 
   const started = useRef(false);
-  const phase = useRef<"idle" | "fall" | "ripple" | "done">("idle");
+  const phase = useRef<"idle" | "fall" | "impact" | "done">("idle");
   const vy = useRef(0);
   const y = useRef(startY);
   const rt = useRef(0);
 
-  const { camera } = useThree();
-  const vDir = useMemo(() => new THREE.Vector3(), []);
+  const particleCount = 55;
 
-  // ---------- Water shader material for fullscreen splash ----------
-  const splashMat = useMemo(() => {
-    const c = new THREE.Color(color);
-    const mat = new THREE.ShaderMaterial({
-      transparent: true,
-      depthWrite: false,
-      depthTest: false,
-      blending: THREE.NormalBlending, //  water feel (not neon). For neon use AdditiveBlending.
-      uniforms: {
-        uTime: { value: 0 },
-        uAlpha: { value: 0 },
-        uColor: { value: new THREE.Vector3(c.r, c.g, c.b) },
-      },
-      vertexShader: `
-        varying vec2 vUv;
-        void main() {
-          vUv = uv;
-          gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0);
-        }
-      `,
-      fragmentShader: `
-        precision highp float;
-        varying vec2 vUv;
-        uniform float uTime;
-        uniform float uAlpha;
-        uniform vec3 uColor;
+  const particlePositions = useMemo(() => {
+    const arr = new Float32Array(particleCount * 3);
+    return arr;
+  }, []);
 
-        float hash(vec2 p){
-          p = fract(p * vec2(123.34, 456.21));
-          p += dot(p, p + 45.32);
-          return fract(p.x * p.y);
-        }
+  const particleVelocities = useMemo(() => {
+    const arr = Array.from({ length: particleCount }, () => new THREE.Vector3());
+    return arr;
+  }, []);
 
-        void main() {
-          // center space
-          vec2 p = vUv - 0.5;
-          float r = length(p);
-
-          // soft circular mask
-          float mask = smoothstep(0.62, 0.0, r);
-
-          // distortion (water wobble)
-          float n = hash(p + uTime * 0.08);
-          p += 0.012 * vec2(
-            sin(uTime * 1.7 + p.y * 14.0 + n * 6.0),
-            cos(uTime * 1.4 + p.x * 14.0 + n * 6.0)
-          );
-
-          float r2 = length(p);
-
-          // ripple rings expanding
-          float waves = sin((r2 * 38.0 - uTime * 18.0) * 6.28318);
-          float ripple = pow(0.5 + 0.5 * waves, 2.2);
-
-          // highlights near rings
-          float edge = smoothstep(0.0, 0.015, abs(waves));
-
-          // final alpha
-          float a = uAlpha * mask * (0.25 + 0.75 * ripple) * (1.0 - 0.35 * edge);
-
-          // water-ish tint + slight white highlight
-          vec3 col = mix(vec3(1.0), uColor, 0.72);
-
-          gl_FragColor = vec4(col, a);
-        }
-      `,
-    });
-    return mat;
-    // recreate when color changes
-  }, [color]);
-
-  // update shader color if prop changes (without recreating plane)
-  useEffect(() => {
-    const c = new THREE.Color(color);
-    splashMat.uniforms.uColor.value.set(c.r, c.g, c.b);
-  }, [color, splashMat]);
-
-  // ---------- reset on play ----------
   useEffect(() => {
     if (!play) return;
 
@@ -124,7 +57,7 @@ export default function SingleDropIntro({
     if (dropRef.current) {
       dropRef.current.visible = true;
       dropRef.current.position.set(x, startY, z);
-      dropRef.current.scale.setScalar(0.16);
+      dropRef.current.scale.set(0.12, 0.18, 0.12);
     }
 
     if (ringRef.current) {
@@ -133,88 +66,142 @@ export default function SingleDropIntro({
       (ringRef.current.material as THREE.MeshBasicMaterial).opacity = 0;
     }
 
-    if (splashRef.current) {
-      splashRef.current.visible = false;
-      splashRef.current.scale.setScalar(0.2);
-      splashMat.uniforms.uAlpha.value = 0;
+    if (haloRef.current) {
+      haloRef.current.visible = false;
+      haloRef.current.scale.setScalar(0.2);
+      (haloRef.current.material as THREE.MeshBasicMaterial).opacity = 0;
     }
-  }, [play, startY, x, z, splashMat]);
+
+    if (beamRef.current) {
+      beamRef.current.visible = false;
+      beamRef.current.scale.set(1, 0.2, 1);
+      (beamRef.current.material as THREE.MeshBasicMaterial).opacity = 0;
+    }
+
+    if (particlesRef.current) {
+      particlesRef.current.visible = false;
+    }
+  }, [play, startY, x, z]);
 
   useFrame((state, dt) => {
     if (!play || !started.current) return;
 
     const t = state.clock.elapsedTime;
-    splashMat.uniforms.uTime.value = t;
-
-    // keep fullscreen plane in front of camera
-    if (splashRef.current) {
-      camera.getWorldDirection(vDir);
-      splashRef.current.position.copy(camera.position).add(vDir.multiplyScalar(0.85));
-      splashRef.current.quaternion.copy(camera.quaternion);
-    }
 
     if (phase.current === "fall") {
       vy.current += 26 * dt;
       y.current -= vy.current * dt;
 
-      const wobX = Math.cos(t * 6.5) * 0.03;
-      const wobZ = Math.sin(t * 5.8) * 0.03;
+      const wobX = Math.cos(t * 6.2) * 0.025;
+      const wobZ = Math.sin(t * 5.7) * 0.025;
 
       if (dropRef.current) {
         dropRef.current.position.set(x + wobX, y.current, z + wobZ);
-        dropRef.current.rotation.y += dt * 2.2;
+        dropRef.current.rotation.y += dt * 2.4;
       }
 
       if (y.current <= hitY) {
-        phase.current = "ripple";
+        phase.current = "impact";
         rt.current = 0;
 
         if (dropRef.current) dropRef.current.visible = false;
 
         if (ringRef.current) {
           ringRef.current.visible = true;
-          ringRef.current.position.set(x, hitY + 0.02, z);
-          ringRef.current.scale.setScalar(0.3);
-          (ringRef.current.material as THREE.MeshBasicMaterial).opacity = 0.7;
+          ringRef.current.position.set(x, hitY + 0.015, z);
+          ringRef.current.scale.setScalar(0.28);
+          (ringRef.current.material as THREE.MeshBasicMaterial).opacity = 0.9;
         }
 
-        if (splashRef.current) {
-          splashRef.current.visible = true;
-          splashRef.current.scale.setScalar(0.2);
-          splashMat.uniforms.uAlpha.value = 0.65; // strong start
+        if (haloRef.current) {
+          haloRef.current.visible = true;
+          haloRef.current.position.set(x, hitY + 0.03, z);
+          haloRef.current.scale.setScalar(0.35);
+          (haloRef.current.material as THREE.MeshBasicMaterial).opacity = 0.55;
+        }
+
+        if (beamRef.current) {
+          beamRef.current.visible = true;
+          beamRef.current.position.set(x, hitY + 0.4, z);
+          beamRef.current.scale.set(1, 0.1, 1);
+          (beamRef.current.material as THREE.MeshBasicMaterial).opacity = 0.85;
+        }
+
+        if (particlesRef.current) {
+          const pos = particlesRef.current.geometry.getAttribute("position") as THREE.BufferAttribute;
+
+          for (let i = 0; i < particleCount; i++) {
+            pos.array[i * 3 + 0] = x;
+            pos.array[i * 3 + 1] = hitY + 0.04;
+            pos.array[i * 3 + 2] = z;
+
+            const angle = (i / particleCount) * Math.PI * 2;
+            const spread = 1 + Math.random() * 0.8;
+
+            particleVelocities[i].set(
+              Math.cos(angle) * spread,
+              0.2 + Math.random() * 0.35,
+              Math.sin(angle) * spread * 0.35
+            );
+          }
+
+          pos.needsUpdate = true;
+          particlesRef.current.visible = true;
         }
       }
     }
 
-    if (phase.current === "ripple") {
+    if (phase.current === "impact") {
       rt.current += dt;
 
-      const dur = 1.15;
+      const dur = 1.0;
       const p = Math.min(rt.current / dur, 1);
       const e = 1 - Math.pow(1 - p, 3);
 
-      // ring on the ground
       if (ringRef.current) {
-        const s = THREE.MathUtils.lerp(0.3, 7.2, e);
+        const s = THREE.MathUtils.lerp(0.35, 10.5, e);
         ringRef.current.scale.setScalar(s);
-        const mat = ringRef.current.material as THREE.MeshBasicMaterial;
-        mat.opacity = 0.7 * (1 - e);
+        (ringRef.current.material as THREE.MeshBasicMaterial).opacity = 0.9 * (1 - e);
       }
 
-      // fullscreen water wash
-      if (splashRef.current) {
-        const s = THREE.MathUtils.lerp(0.2, 4.2, e);
-        splashRef.current.scale.setScalar(s);
+      if (haloRef.current) {
+        const s = THREE.MathUtils.lerp(0.45, 3.8, e);
+        haloRef.current.scale.setScalar(s);
+        haloRef.current.position.y = hitY + 0.03 + e * 0.08;
+        (haloRef.current.material as THREE.MeshBasicMaterial).opacity = 0.55 * (1 - e);
+      }
 
-        // fade out quicker like splash
-        splashMat.uniforms.uAlpha.value = 0.65 * (1 - Math.min(1, e * 1.35));
+      if (beamRef.current) {
+        beamRef.current.scale.y = THREE.MathUtils.lerp(0.2, 5.2, e);
+        beamRef.current.position.y = hitY + 0.15 + beamRef.current.scale.y * 0.22;
+        (beamRef.current.material as THREE.MeshBasicMaterial).opacity = 0.85 * (1 - e * 1.2);
+      }
+
+      if (particlesRef.current) {
+        const pos = particlesRef.current.geometry.getAttribute("position") as THREE.BufferAttribute;
+
+        for (let i = 0; i < particleCount; i++) {
+          pos.array[i * 3 + 0] += particleVelocities[i].x * dt;
+          pos.array[i * 3 + 1] += particleVelocities[i].y * dt;
+          pos.array[i * 3 + 2] += particleVelocities[i].z * dt;
+
+          particleVelocities[i].multiplyScalar(0.985);
+        }
+
+        pos.needsUpdate = true;
+
+        const mat = particlesRef.current.material as THREE.PointsMaterial;
+        mat.opacity = 0.95 * (1 - e);
       }
 
       if (p >= 1) {
         phase.current = "done";
+
         if (ringRef.current) ringRef.current.visible = false;
-        if (splashRef.current) splashRef.current.visible = false;
-        splashMat.uniforms.uAlpha.value = 0;
+        if (haloRef.current) haloRef.current.visible = false;
+        if (beamRef.current) beamRef.current.visible = false;
+        if (particlesRef.current) particlesRef.current.visible = false;
+
         onDone?.();
       }
     }
@@ -222,9 +209,9 @@ export default function SingleDropIntro({
 
   return (
     <group frustumCulled={false}>
-      {/* droplet */}
-      <mesh ref={dropRef} frustumCulled={false} renderOrder={30}>
-        <sphereGeometry args={[1, 26, 26]} />
+      {/* falling packet / drop */}
+      <mesh ref={dropRef} renderOrder={30}>
+        <sphereGeometry args={[1, 20, 20]} />
         <meshBasicMaterial
           color={color}
           transparent
@@ -235,9 +222,14 @@ export default function SingleDropIntro({
         />
       </mesh>
 
-      {/* ripple ring */}
-      <mesh ref={ringRef} rotation={[-Math.PI / 2, 0, 0]} frustumCulled={false} renderOrder={20} visible={false}>
-        <ringGeometry args={[0.22, 0.28, 110]} />
+      {/* ground ring */}
+      <mesh
+        ref={ringRef}
+        rotation={[-Math.PI / 2, 0, 0]}
+        renderOrder={20}
+        visible={false}
+      >
+        <ringGeometry args={[0.2, 0.28, 96]} />
         <meshBasicMaterial
           color={color}
           transparent
@@ -248,11 +240,53 @@ export default function SingleDropIntro({
         />
       </mesh>
 
-      {/* fullscreen splash plane (shader) */}
-      <mesh ref={splashRef} frustumCulled={false} renderOrder={999} visible={false}>
-        <planeGeometry args={[1, 1]} />
-        <primitive object={splashMat} attach="material" />
+      {/* impact halo */}
+      <mesh ref={haloRef} renderOrder={19} visible={false}>
+        <sphereGeometry args={[0.35, 18, 18]} />
+        <meshBasicMaterial
+          color={color}
+          transparent
+          opacity={0}
+          blending={THREE.AdditiveBlending}
+          depthWrite={false}
+          depthTest={false}
+          wireframe
+        />
       </mesh>
+
+      {/* vertical signal beam */}
+      <mesh ref={beamRef} renderOrder={18} visible={false}>
+        <cylinderGeometry args={[0.02, 0.02, 1, 12]} />
+        <meshBasicMaterial
+          color={color}
+          transparent
+          opacity={0}
+          blending={THREE.AdditiveBlending}
+          depthWrite={false}
+          depthTest={false}
+        />
+      </mesh>
+
+      {/* impact particles */}
+      <points ref={particlesRef} visible={false} renderOrder={21}>
+        <bufferGeometry>
+          <bufferAttribute
+            attach="attributes-position"
+            array={particlePositions}
+            count={particlePositions.length / 3}
+            itemSize={3}
+          />
+        </bufferGeometry>
+        <pointsMaterial
+          color={color}
+          size={0.06}
+          transparent
+          opacity={0.95}
+          blending={THREE.AdditiveBlending}
+          depthWrite={false}
+          depthTest={false}
+        />
+      </points>
     </group>
   );
 }
