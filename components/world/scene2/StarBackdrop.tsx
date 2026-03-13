@@ -1,7 +1,7 @@
 "use client";
 
 import * as THREE from "three";
-import React, { useMemo, useRef } from "react";
+import React, { useEffect, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 
 export default function StarBackdrop({
@@ -16,18 +16,35 @@ export default function StarBackdrop({
   zMax?: number;
 }) {
   const ref = useRef<THREE.Points>(null!);
+  const positionsRef = useRef<Float32Array>(new Float32Array(count * 3));
+  const seedRef = useRef(1357911);
 
-  const positions = useMemo(() => {
-    const p = new Float32Array(count * 3);
-    const rand = (a: number, b: number) => a + Math.random() * (b - a);
+  const rand = (a: number, b: number) => {
+    seedRef.current = (1664525 * seedRef.current + 1013904223) % 4294967296;
+    const r = seedRef.current / 4294967296;
+    return a + r * (b - a);
+  };
+
+  const initialPositions = useMemo(() => new Float32Array(count * 3), [count]);
+
+  useEffect(() => {
+    const positions = new Float32Array(count * 3);
 
     for (let i = 0; i < count; i++) {
       const a = i * 3;
-      p[a + 0] = rand(-radius, radius);
-      p[a + 1] = rand(-radius * 0.55, radius * 0.55);
-      p[a + 2] = rand(zMin, zMax);
+      positions[a + 0] = rand(-radius, radius);
+      positions[a + 1] = rand(-radius * 0.55, radius * 0.55);
+      positions[a + 2] = rand(zMin, zMax);
     }
-    return p;
+
+    positionsRef.current = positions;
+
+    const points = ref.current;
+    if (!points) return;
+
+    const attr = points.geometry.getAttribute("position") as THREE.BufferAttribute;
+    attr.array = positionsRef.current;
+    attr.needsUpdate = true;
   }, [count, radius, zMin, zMax]);
 
   useFrame((state, dt) => {
@@ -35,7 +52,6 @@ export default function StarBackdrop({
 
     ref.current.rotation.y += dt * 0.01;
 
-    // subtle parallax on the whole star field
     ref.current.position.x = THREE.MathUtils.lerp(
       ref.current.position.x,
       -state.pointer.x * 1.2,
@@ -52,11 +68,14 @@ export default function StarBackdrop({
   return (
     <points ref={ref} frustumCulled={false} renderOrder={1}>
       <bufferGeometry>
-        <bufferAttribute attach="attributes-position" array={positions} itemSize={3} />
+        <bufferAttribute
+          attach="attributes-position"
+          args={[initialPositions, 3]}
+        />
       </bufferGeometry>
 
       <pointsMaterial
-        color={"#2fffe0"}
+        color="#2fffe0"
         size={0.13}
         sizeAttenuation
         transparent
