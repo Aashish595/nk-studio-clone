@@ -41,7 +41,10 @@ export default function SingleDropIntro({
   }, []);
 
   const particleVelocities = useMemo(() => {
-    const arr = Array.from({ length: particleCount }, () => new THREE.Vector3());
+    const arr = Array.from(
+      { length: particleCount },
+      () => new THREE.Vector3(),
+    );
     return arr;
   }, []);
 
@@ -128,7 +131,9 @@ export default function SingleDropIntro({
         }
 
         if (particlesRef.current) {
-          const pos = particlesRef.current.geometry.getAttribute("position") as THREE.BufferAttribute;
+          const pos = particlesRef.current.geometry.getAttribute(
+            "position",
+          ) as THREE.BufferAttribute;
 
           for (let i = 0; i < particleCount; i++) {
             pos.array[i * 3 + 0] = x;
@@ -141,7 +146,7 @@ export default function SingleDropIntro({
             particleVelocities[i].set(
               Math.cos(angle) * spread,
               0.2 + Math.random() * 0.35,
-              Math.sin(angle) * spread * 0.35
+              Math.sin(angle) * spread * 0.35,
             );
           }
 
@@ -161,24 +166,30 @@ export default function SingleDropIntro({
       if (ringRef.current) {
         const s = THREE.MathUtils.lerp(0.35, 10.5, e);
         ringRef.current.scale.setScalar(s);
-        (ringRef.current.material as THREE.MeshBasicMaterial).opacity = 0.9 * (1 - e);
+        (ringRef.current.material as THREE.MeshBasicMaterial).opacity =
+          0.9 * (1 - e);
       }
 
       if (haloRef.current) {
         const s = THREE.MathUtils.lerp(0.45, 3.8, e);
         haloRef.current.scale.setScalar(s);
         haloRef.current.position.y = hitY + 0.03 + e * 0.08;
-        (haloRef.current.material as THREE.MeshBasicMaterial).opacity = 0.55 * (1 - e);
+        (haloRef.current.material as THREE.MeshBasicMaterial).opacity =
+          0.55 * (1 - e);
       }
 
       if (beamRef.current) {
         beamRef.current.scale.y = THREE.MathUtils.lerp(0.2, 5.2, e);
-        beamRef.current.position.y = hitY + 0.15 + beamRef.current.scale.y * 0.22;
-        (beamRef.current.material as THREE.MeshBasicMaterial).opacity = 0.85 * (1 - e * 1.2);
+        beamRef.current.position.y =
+          hitY + 0.15 + beamRef.current.scale.y * 0.22;
+        (beamRef.current.material as THREE.MeshBasicMaterial).opacity =
+          0.85 * (1 - e * 1.2);
       }
 
       if (particlesRef.current) {
-        const pos = particlesRef.current.geometry.getAttribute("position") as THREE.BufferAttribute;
+        const pos = particlesRef.current.geometry.getAttribute(
+          "position",
+        ) as THREE.BufferAttribute;
 
         for (let i = 0; i < particleCount; i++) {
           pos.array[i * 3 + 0] += particleVelocities[i].x * dt;
@@ -272,9 +283,7 @@ export default function SingleDropIntro({
         <bufferGeometry>
           <bufferAttribute
             attach="attributes-position"
-            array={particlePositions}
-            count={particlePositions.length / 3}
-            itemSize={3}
+            args={[particlePositions, 3]}
           />
         </bufferGeometry>
         <pointsMaterial

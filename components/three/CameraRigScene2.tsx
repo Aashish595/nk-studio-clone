@@ -8,10 +8,7 @@ export default function CameraRigScene2() {
   const { camera, size } = useThree();
 
   const mouse = useRef({ x: 0, y: 0 });
-
-  // move camera closer here
   const basePosition = useRef(new THREE.Vector3(1.65, 1.0, 9.6));
-
   const targetPosition = useRef(new THREE.Vector3());
   const lookTarget = useRef(new THREE.Vector3());
 
@@ -24,11 +21,6 @@ export default function CameraRigScene2() {
     window.addEventListener("mousemove", onMove, { passive: true });
     return () => window.removeEventListener("mousemove", onMove);
   }, [size]);
-
-  useEffect(() => {
-    camera.fov = 38;
-    camera.updateProjectionMatrix();
-  }, [camera]);
 
   useFrame((_, dt) => {
     const mx = mouse.current.x;
@@ -48,7 +40,7 @@ export default function CameraRigScene2() {
 
     lookTarget.current.set(
       -4.2 + mx * 0.12,
-      0.55 + (-my * 0.06),
+      0.55 + -my * 0.06,
       -1.8
     );
 

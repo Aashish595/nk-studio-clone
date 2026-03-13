@@ -9,7 +9,7 @@ type Props = {
   areaX?: number;
   areaY?: number;
   depth?: number;
-  nearZ?: number;     // when to respawn (near camera)
+  nearZ?: number; // when to respawn (near camera)
   minSpeed?: number;
   maxSpeed?: number;
   minScale?: number;
@@ -17,12 +17,12 @@ type Props = {
 };
 
 type Drop = {
-  bx: number;   // base x
-  by: number;   // base y
-  z: number;    // current z
-  v: number;    // speed toward camera
+  bx: number; // base x
+  by: number; // base y
+  z: number; // current z
+  v: number; // speed toward camera
   phase: number;
-  s: number;    // base scale
+  s: number; // base scale
 };
 
 export default function DropletField({
@@ -70,7 +70,11 @@ export default function DropletField({
       const y = d.by + Math.sin(t * 1.55 + d.phase) * 0.22;
 
       // slightly grow when closer (subtle)
-      const closeness = THREE.MathUtils.clamp((d.z + depth) / (depth + nearZ), 0, 1);
+      const closeness = THREE.MathUtils.clamp(
+        (d.z + depth) / (depth + nearZ),
+        0,
+        1,
+      );
       const s = d.s * (0.85 + closeness * 0.55);
 
       // respawn deep when it passes camera zone
@@ -97,7 +101,7 @@ export default function DropletField({
     <group frustumCulled={false}>
       <instancedMesh
         ref={meshRef}
-        args={[undefined as any, undefined as any, count]}
+        args={[undefined, undefined, count]}
         frustumCulled={false}
         renderOrder={5}
       >
